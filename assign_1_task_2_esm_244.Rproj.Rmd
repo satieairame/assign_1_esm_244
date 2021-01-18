@@ -1,0 +1,66 @@
+---
+title: "assign_1_task_2_esm_244"
+author: "Satie Airame"
+date: "1/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(here)
+library(ggfortify)
+library (gghighlight)
+library(lubridate)
+library(plotly)
+library(patchwork)
+```
+
+
+```{r}
+world_env_vars <- read_csv(here("data", "world_env_vars.csv")) 
+
+world_env_vars_subset <- world_env_vars %>% 
+  select(cropland_cover, tree_canopy_cover, rain_mean_annual, temp_max_warmestMonth, temp_min_coldestMonth, cloudiness, elevation, aspect, slope) 
+
+world_env_vars_subset_pca <- world_env_vars_subset %>% 
+  drop_na() %>% 
+  scale() %>% 
+  prcomp()
+world_env_vars_subset_pca$rotation
+```
+
+
+```{r}
+world_env_vars_subset_complete <- world_env_vars_subset %>%
+  drop_na(cropland_cover, tree_canopy_cover, rain_mean_annual, temp_max_warmestMonth, temp_min_coldestMonth, cloudiness, elevation, aspect, slope)
+
+autoplot(world_env_vars_subset_pca,
+         data = world_env_vars_subset_complete,
+         loadings = TRUE,
+         loadings.label = TRUE)
+```
+
+The variables that are positively correlated are:
+* cropland_cover and elevation
+* rain_mean_annual, tree_canopy_cover, cloudiness
+
+The variables that are negatively correlated are:
+* temp_min_coldestMonth and cropland_cover
+* temp_max_warmestMonth and slope
+* rain_mean_annual and cropland cover
+* tree_canopy_cover and cropland_cover
+
+The variables that are not correlated are:
+* temp_min_coldestMonth and cloudiness
+* tree_canopy_cover and temp_max_warmestMonth
+* rain_mean_annual and temp_max_warmestMonth
+
+
+
+
+
+
+
+
