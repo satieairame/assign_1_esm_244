@@ -1,0 +1,111 @@
+---
+title: "assign_1_esm_244_ satie_airame"
+author: "Satie Airame"
+date: "1/17/2021"
+output: html_document
+---
+
+# Amphibian Abundance recorded by the Sierra Lakes Inventory Project
+
+### Amphibian surveys of Sierra Nevada lakes from 1995-2002.
+
+### Reference: Knapp, R.A., C. Pavelka, E.E. Hegeman, and T.C. Smith. 2020. The Sierra Lakes Inventory Project: Non-Native fish and community composition of lakes and ponds in the Sierra Nevada, California ver 2. Environmental Data Initiative. https://doi.org/10.6073/pasta/d835832d7fd00d9e4466e44eea87fab3
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+library(patchwork)
+library(lubridate)
+library(readxl)
+library(dplyr)
+```
+
+### Graph of total mountain yellow legged frog (Rana mucosa) count each year across all water bodies, by life stage excluding "EggMass." 
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+sierra_frogs <- read_excel(here("data", "sierra_amphibians.xlsx"))
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+ramu <- sierra_frogs %>% 
+  filter(amphibian_species == "RAMU") %>% 
+  filter(amphibian_life_stage %in% c("Adult", "SubAdult", "Tadpole")) %>% 
+  mutate(date_new = ymd(survey_date)) %>% 
+  mutate(year_new = year(date_new))
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+ramu_count <- ramu %>% 
+  group_by(year_new) %>% 
+  summarize(total_frogs = sum(amphibian_number, na.rm = TRUE))
+
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+p1 <- ggplot(data = ramu_count, aes(x = year_new, y = total_frogs))+
+  geom_col() +
+  labs(x = "Year",
+       y = "Total Number (Adults, subadults, tadpoles)",
+       title = "Number of Rana mucosa in Sierra Nevada Lakes, 1995 - 2002")
+
+p1
+```
+
+### Column graph containing counts (over all years) of combined adult and subadult endangered mountain yellow-legged frogs (Rana mucosa) obsered in 5 lakes with the greatest observed counts. Exclude tadpoles. Consider reformatting from a number to a label "Lake 10025", then use fct_roder to cover it to an ordered factor.
+
+```{r}
+
+ramu_2 <- sierra_frogs %>% 
+  filter(amphibian_species == "RAMU") %>% 
+  filter(amphibian_life_stage %in% c("Adult", "SubAdult")) %>% 
+  mutate(date_new = ymd(survey_date)) %>% 
+  mutate(year_new = year(date_new)) %>% 
+  add_column(lake_id_2 = "Lake ")
+# Would like to add "Lake" in front of each lake number
+
+```
+
+```{r}
+ramu_2_unite <- ramu_2 %>% 
+  unite("lake_id_3", lake_id_2, lake_id, sep = "")
+```
+
+
+```{r}
+ramu_2_count <- ramu_2_unite %>% 
+  group_by(lake_id_3) %>% 
+  summarize(total_frogs_2 = sum(amphibian_number, na.rm = TRUE))
+ramu_2_count
+```
+
+```{r}
+ramu_2_count_top_5 <- ramu_2_count %>% 
+  top_n(5) 
+ramu_2_count_top_5
+
+# Need to sort in descending order
+```
+
+
+```{r}
+p2 <- ggplot(data = ramu_2_count_top_5, aes(x = lake_id_3, y = total_frogs_2))+
+  geom_col() +
+  labs(x = NULL,
+       y = "Total Number (Adults and Subadults)",
+       title = "Number of adult and subadult Rana mucosa at top 5 Sierra lakes")
+p2
+```
+
+```
+
+### Combine graphs into a single compound figure using the {patchwork} package. Add figure caption.
+
+```{r}
+p3 <- p1 + p2 + plot_layout(ncol=1,heights=c(2,1))
+p3
+```
+
